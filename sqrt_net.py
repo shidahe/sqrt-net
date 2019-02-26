@@ -45,6 +45,7 @@ def test(model, test_size):
       test_loss += F.mse_loss(output, target).item()
   test_loss /= test_size
   print('\nTest set: average loss: {:.4f}\n'.format(test_loss))
+  return test_loss
 
 
 model = Net()
@@ -54,8 +55,14 @@ model = Net()
 optimizer = optim.Adagrad(model.parameters())
 #optimizer = optim.Adamax(model.parameters())
 
+prev_loss = 100000000
 for epoch in range(200):
   train(model, optimizer, 500)
-  test(model, 500)
-  print('sqrt of 400: {:.4f}'.format(model(torch.FloatTensor([400])).item()))
+  test_loss = test(model, 500)
+  if test_loss < prev_loss:
+    torch.save(model.state_dict(), './best_sqrt.mod')
+
+model.load_state_dict(torch.load('./best_sqrt.mod'))
+print('best test loss:', test(model, 500))
+print('sqrt of 400: {:.4f}'.format(model(torch.FloatTensor([400])).item()))
 
