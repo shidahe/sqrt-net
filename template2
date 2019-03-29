@@ -22,15 +22,16 @@ from tensorboardX import SummaryWriter
 from torch import randperm
 
  
-file1 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\input.csv' # read position
-file2 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\output.csv'
+#file1 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\input.csv' # read position
+#file2 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\output.csv'
+file1 = './inputs.csv'
+file2 = './outputs.csv'
  
 InputData = pd.read_csv(file1)
 TargetData = pd.read_csv(file2)
 
 
-
-Combination = pd.merge(InputData, TargetData,how='inner', on = 'Date')
+Combination = pd.merge(InputData, TargetData, how='inner', on = 'Date')
 
 train_size = int(0.8*len(Combination))  # 80% training data
 test_size = len(Combination) - train_size
