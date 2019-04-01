@@ -22,15 +22,15 @@ from tensorboardX import SummaryWriter
 from torch import randperm
 
  
-file1 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\GE.csv' # read position
-file2 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\GE_output.csv'
+#file1 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\GE.csv' # read position
+#file2 = 'C:\\Users\\sarah.du\\OneDrive - AIMCo\\Desktop\\Test\\GE_output.csv'
+file1 = './GE.csv'
+file2 = './GE_output.csv'
  
-InputData = pd.read_csv(file1)
-TargetData = pd.read_csv(file2)
+InputData = pd.read_csv(file1, sep='\t')
+TargetData = pd.read_csv(file2, sep='\t')
 
-
-
-Combination = pd.merge(InputData, TargetData,how='inner', on = 'Date')
+Combination = pd.merge(InputData, TargetData, how='inner', on='Date')
 
 index = [i for i in range(Combination.shape[0])]
 random.shuffle(index)
@@ -38,6 +38,8 @@ Combination=Combination.set_index([index]).sort_index()
 
 Combination1=Combination.drop(["Date",],axis=1)
 
+std_Combination = Combination1.std()
+mean_Combination = Combination1.mean()
 
 normalized_Combination=(Combination1-Combination1.mean())/Combination1.std()
 
@@ -64,14 +66,18 @@ def train(model, optimizer, train_size):
   model.train()
   train= normalized_Combination.iloc[0:train_size,:]
 
+  train_loss = 0
+
   for i in range(0,len(train)):
     data = torch.tensor(train.iloc[i,0:9].astype(np.float32))
     target = torch.tensor(train.iloc[i,9].astype(np.float32))
     optimizer.zero_grad()
     output = model(data)
     loss = F.mse_loss(output, target)  ##mse_loss = ((input-target)**2).mean()
+    train_loss += loss.item()
     loss.backward()
     optimizer.step()
+  print('Average train loss:', train_loss / len(train))
 savedata=[]
 
 
@@ -97,13 +103,16 @@ def test(model, test_size):
 
 model = Net()
 
-optimizer = optim.Adagrad(model.parameters())
+#optimizer = optim.Adagrad(model.parameters())
+optimizer = optim.SGD(model.parameters(), lr=0.001)
+scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.95)
 
 
 prev_loss = 100000000
 for epoch in range(1000):
   train(model, optimizer, train_size)
   test_loss = test(model, test_size)
+  scheduler.step()
   if test_loss < prev_loss:
     torch.save(model.state_dict(), './best_random_model.mod')
 
