@@ -78,6 +78,7 @@ def train(model, optimizer, train_size):
     loss.backward()
     optimizer.step()
   print('Average train loss:', train_loss / len(train))
+  return train_loss / len(train)
 savedata=[]
 
 
@@ -110,16 +111,17 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.95)
 
 prev_loss = 100000000
 for epoch in range(1000):
-  train(model, optimizer, train_size)
+  train_loss = train(model, optimizer, train_size)
   test_loss = test(model, test_size)
   scheduler.step()
   if test_loss < prev_loss:
     torch.save(model.state_dict(), './best_random_model.mod')
-
+  if train_loss < test_loss / 2:
+    break
 
 
 model.load_state_dict(torch.load('./best_random_model.mod'))
-print('best test loss:', test(model, 1000))
+print('best test loss:', test(model, test_size))
 #print('Estimate for 64: {:.4f}'.format(model(torch.FloatTensor([64,32])).item()))
 
 
