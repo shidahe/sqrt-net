@@ -38,10 +38,13 @@ Combination=Combination.set_index([index]).sort_index()
 
 Combination1=Combination.drop(["Date",],axis=1)
 
-std_Combination = Combination1.std()
-mean_Combination = Combination1.mean()
+std_Combination = Combination1.std(axis=0)
+mean_Combination = Combination1.mean(axis=0)
 
-normalized_Combination=(Combination1-Combination1.mean())/Combination1.std()
+print(std_Combination)
+print(mean_Combination)
+
+normalized_Combination = (Combination1 - mean_Combination) / std_Combination
 
 train_size = int(0.8*len(normalized_Combination))  # 80% training data
 test_size = len(normalized_Combination) - train_size
@@ -79,25 +82,26 @@ def train(model, optimizer, train_size):
     optimizer.step()
   print('Average train loss:', train_loss / len(train))
   return train_loss / len(train)
-savedata=[]
 
 
 def test(model, test_size):
   model.eval()
   test_loss = 0
+  near_count = 0
   with torch.no_grad():
     test = normalized_Combination.iloc[train_size:train_size+test_size,:]
-    
 
     for i in range(0,len(test)):
       data = torch.tensor(test.iloc[i,0:9].astype(np.float32))
       target = torch.tensor(test.iloc[i,9].astype(np.float32))
       output = model(data)
       test_loss += F.mse_loss(output, target).item()
+      pred_diff = abs(output - target) * std_Combination[9]
+      if pred_diff < 100000000:
+        near_count += 1
   test_loss /= test_size
-
-  savedata.append(float(test_loss))
-  print('\nTest set: average loss: {:.4f}\n'.format(test_loss))
+  print('Test set: average loss: {:.4f}'.format(test_loss))
+  print('Test near rate:', float(near_count) / test_size)
 
   return test_loss
 
@@ -120,6 +124,7 @@ for epoch in range(1000):
   if train_loss >= prev_train_loss:
     break
   prev_train_loss = train_loss
+  print('Epoch {} done'.format(epoch))  
 
 
 model.load_state_dict(torch.load('./best_random_model.mod'))
