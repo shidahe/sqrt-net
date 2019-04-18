@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr 17 14:20:39 2019
+
+@author: sarah.du
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,8 +20,10 @@ class Net(nn.Module):
     self.fc3 = nn.Linear(64, 1)
   
   def forward(self, x):
-    x = F.sigmoid(self.fc1(x))
-    x = F.sigmoid(self.fc2(x))
+    #x = F.sigmoid(self.fc1(x))
+    x = F.relu(self.fc1(x))
+    #x = F.sigmoid(self.fc2(x))
+    x = F.relu(self.fc2(x))
     x = self.fc3(x)
     return x
 
@@ -50,9 +59,9 @@ def test(model, test_size):
 
 model = Net()
 #optimizer = optim.SGD(model.parameters(), lr=1e-10, momentum=0.8)
-#optimizer = optim.Adam(model.parameters())
+optimizer = optim.Adam(model.parameters(), amsgrad=True)
 #optimizer = optim.Adadelta(model.parameters())
-optimizer = optim.Adagrad(model.parameters())
+#optimizer = optim.Adagrad(model.parameters())
 #optimizer = optim.Adamax(model.parameters())
 
 prev_loss = 100000000
@@ -65,4 +74,3 @@ for epoch in range(200):
 model.load_state_dict(torch.load('./best_sqrt.mod'))
 print('best test loss:', test(model, 500))
 print('sqrt of 400: {:.4f}'.format(model(torch.FloatTensor([400])).item()))
-
