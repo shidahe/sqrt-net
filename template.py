@@ -126,7 +126,6 @@ prev_loss = 100000000
 for epoch in range(200):
   train_loss = train(model, optimizer, train_size)
   test_loss = test(model, test_size)
-  optimizer.step()
   if test_loss < prev_loss:
     torch.save(model.state_dict(), './best_random_model.mod')
     prev_loss = test_loss
