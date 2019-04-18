@@ -129,6 +129,7 @@ for epoch in range(200):
   optimizer.step()
   if test_loss < prev_loss:
     torch.save(model.state_dict(), './best_random_model.mod')
+    prev_loss = test_loss
   print('Epoch {} done'.format(epoch))  
 
 
